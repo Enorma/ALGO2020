@@ -64,6 +64,8 @@ int readMax() {
 }//readMax
 
 //rebalancear el heap (usar despues de cada insert o remove)
+//[T(n) = log n] en el peor caso (se rebalancea desde la raiz hasta una hoja del nivel mas bajo)
+//[T(n) = 1] en el mejor caso (el nodo i ya esta balanceado o es un nodo hoja)
 void maxHeapify(int i) {
 
     if(i<0 || i>=heap_size) {
@@ -118,6 +120,8 @@ void edit(int i, int new_value) {
 }//edit
 
 //construir un heap a partir de un arreglo y su tamaño (que nos envia Python)
+//[T(n) = n log n] en el peor caso (corriendo el peor caso del heapify)
+//[T(n) = 1] en el mejor caso (heapificando un arreglo vacio)
 void buildMaxHeap() {
 
     int i;
