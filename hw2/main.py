@@ -37,8 +37,10 @@ def sortingOperations():
     #wrap C's listReader function and set up its arg/return types
     radixSort = wrap_function(libc, "connector", ctypes.POINTER(ctypes.c_int), [ctypes.POINTER(ctypes.c_int), ctypes.c_int])
 
-    #C RadixSort is limited to 9 binary digits so...
-    #...only positive integers from 0 to 511 (inclusive) are allowed.
+    #C RadixSort is limited to K binary digits so...
+    #...only positive integers from 0 to (2^K)-1 (inclusive) are allowed.
+    #K value can be changed in C code (look for MAX_DIGITS constant)
+    #K value is 9 now so 0-511.
     the_list = [506, 469, 498, 326, 381, 274, 298, 94, 5, 2]
     the_size = len(the_list)
 
