@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include "binaryqueueradix.h"
 
 #define RADIX 2 //base de los numeros a ordenar
 #define MAX_DIGITS 9 //longitud de los numeros a ordenar (en binario el máximo es 111111111=1023)
@@ -82,7 +83,6 @@ void cat(QUEUE* a, QUEUE b_head) {
 void sort(QUEUE *queue) {
 
     int i, j, c, div;
-    NODE *r;
 
     //crear un arreglo de RADIX colas y otra cola que usaremos de acumulador
     //queues tiene 2 colas: una para UNOS y otra para CEROS
@@ -128,49 +128,29 @@ void sort(QUEUE *queue) {
         for(accum=NULL, j=0; j<RADIX; j++) {
             cat(&accum, queues[j]);
         }
-
-        //Imprimir el acumulador
-        r = accum;
-
-        printf("\nAcumulador hasta ahora:\n[");
-        do {
-            r = r->next;
-            printf(" %d ", r->val);
-        }while(r!=accum);
-        printf("]\n");
     }
 
     //El acumulador ahora esta ordenado
     *queue = accum;
 }
 
-int main(void) {
+//Para recibir una lista de Python y convertirla en cola
+int* connector(int *numbers, int size) {
 
     int i;
-    int data[] = {
-        0b100110110,
-        0b011101001,
-        0b011010101,
-        0b101011110,
-        0b101000111,
-        0b101010001,
-        0b010110010,
-        0b110010101,
-        0b101010110
-    };
 
     //Crear una cola
     QUEUE a = NULL;
 
-    //Llenar la cola con data
-    for(i=0; i<(sizeof(data)/sizeof(data[0])); i++) {
-        append_node(&a, new_node(data[i]));
+    //Llenar la cola con data enviada de Python
+    for(i=0; i<size; i++) {
+        append_node(&a, new_node(numbers[i]));
     }
 
     //Imprimir la cola desordenada
     NODE *q = a;
 
-    printf("\nCola desordenada:\n[");
+    printf("\nCola desordenada en C:\n[");
     do {
         q = q->next;
         printf(" %d ", q->val);
@@ -183,14 +163,74 @@ int main(void) {
     //Imprimir la cola ordenada
     NODE *p = a;
 
-    printf("\nCola ordenada:\n[");
+    printf("\nCola ordenada en C:\n[");
     do {
         p = p->next;
         printf(" %d ", p->val);
+    }while(p!=a);
+    printf("]\n\n");
+
+    //Retornar los numeros ordenados como int* array
+    int* sorted;
+    sorted = (int*)calloc(size, sizeof(*sorted));
+
+    for(i=0; i<size; i++) {
+        p = p->next;
+        sorted[i] = p->val;
+    }
+
+    return sorted;
+}
+
+/*
+int main(void) {
+
+    int i;
+    int data[] = {
+       0b100110110,
+       0b011101001,
+       0b011010101,
+       0b101011110,
+       0b101000111,
+       0b101010001,
+       0b010110010,
+       0b110010101,
+       0b101010110
+    };
+
+    //Crear una cola
+    QUEUE a = NULL;
+
+    //Llenar la cola con data
+    for(i=0; i<(sizeof(data)/sizeof(data[0])); i++) {
+       append_node(&a, new_node(data[i]));
+    }
+
+    //Imprimir la cola desordenada
+    NODE *q = a;
+
+    printf("\nCola desordenada:\n[");
+    do {
+       q = q->next;
+       printf(" %d ", q->val);
+    }while(q!=a);
+    printf("]\n");
+
+    //Ordenar la cola
+    sort(&a);
+
+    //Imprimir la cola ordenada
+    NODE *p = a;
+
+    printf("\nCola ordenada:\n[");
+    do {
+       p = p->next;
+       printf(" %d ", p->val);
     }while(p!=a);
     printf("]\n");
 
     return 0;
 }
+*/
 
 //eof
