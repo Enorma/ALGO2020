@@ -1,5 +1,6 @@
 import os
 import ctypes
+import timeit
 
 #borrar y recompilar las librerías (los archivos .c y .h deben estar en este mismo directorio)
 def startup():
@@ -109,6 +110,9 @@ def pQueue():
     #(asc_array & asc_list), (dsc_array & dsc_list) o (nul_array & nul_list)
     print("Sending this list to C:\n", dsc_list, sep="")
     minReader(dsc_array, len(dsc_list))
+
+    result = timeit.timeit( minReader(dsc_array, len(dsc_list)), number=1 )
+    print(result)
 
     #ESTA VARIABLE ES NUESTRO HANDLE PARA VER EL HEAP EN PYTHON!!
     #recuperar el array/heap desde C (vive en memoria del .so)
