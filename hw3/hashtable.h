@@ -15,6 +15,7 @@
     bool hashTableDelete(char* name);
     int hashTableRead(char* name);
     void connector();
+    void finish();
 #endif
 
 //EOF

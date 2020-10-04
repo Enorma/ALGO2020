@@ -275,7 +275,10 @@ void connector() {
     hashTableInsert("Kike",     rand()%10+20);
 
     printTable();
+}
 
+//liberar la memoria al finalizar
+void finish() {
     //-----------------------------------------
     //vvvvvvv THIS IS NEEDED AT THE END vvvvvvv
 
@@ -290,6 +293,7 @@ void connector() {
 /*
 int main() {
     connector();
+    finish();
     return 0;
 }
 */
