@@ -37,6 +37,7 @@ def hashTableOperations():
     #wrap C's listReader function and set up its arg/return types
     init           = wrap_function(libc, "connector",       None,          None)
     printTable     = wrap_function(libc, "printTable",      None,          None)
+    finish         = wrap_function(libc, "finish",          None,          None)
     insertKeyValue = wrap_function(libc, "hashTableInsert", ctypes.c_bool, [ctypes.POINTER(ctypes.c_char), ctypes.c_uint])
     deleteKeyValue = wrap_function(libc, "hashTableDelete", ctypes.c_bool, [ctypes.POINTER(ctypes.c_char)])
     getValue       = wrap_function(libc, "hashTableRead",   ctypes.c_uint, [ctypes.POINTER(ctypes.c_char)])
@@ -71,6 +72,7 @@ def hashTableOperations():
     deleteKeyValue(ctypes.create_string_buffer(b"Bernardo"))
 
     printTable()
+    finish()
 #hashTableOperations
 
 def main():
