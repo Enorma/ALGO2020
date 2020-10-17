@@ -1,5 +1,3 @@
-#cd C:\Users\Enorma\Dropbox\Cinvestav\°Grafos
-
 from functools import reduce
 
 MAXVERT = 10
