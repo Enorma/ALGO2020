@@ -1,5 +1,8 @@
 #include<stdio.h>
 #include<stdlib.h>
+#include<string.h>
+#include<time.h>
+#include "rbt.h"
 
 typedef enum color {red, black} color;
 
@@ -28,6 +31,15 @@ void printNode(char* msg, Node *x) {
     }
     printf("%s, key: %d, color: %s\n", msg, x->key, x->color==red?"red":"black");
 }
+
+/*
+void recPrintNode(int i, Node *x) {
+
+    if(x==T->nil) {
+        printNode("parent: ", T->nil);
+    }
+}
+*/
 
 void leftRotate(Tree *T, Node *x) {
 
@@ -75,7 +87,7 @@ void rightRotate(Tree *T, Node *x) {
     x->p    = y;
 }
 
-void insertFixup(Tree *T, Node *z){
+void insertFixup(Tree *T, Node *z) {
 
     while(z->p->color == red) {
 
@@ -181,10 +193,46 @@ Node* search(Node *N, int k) {
     return T->nil;
 }
 
+void insertInt(int i) {
+    Node n = {i, red, T->nil, T->nil, T->nil};
+    insert(T, &n);
+}
+
+int searchInt(int k) {
+    int s = search(T->root, k)->key;
+    return s;
+}
+
+/*
+Node* createNode(int k) {
+    Node x = {k, red, T->nil, T->nil, T->nil};
+    return &x;
+}
+*/
+
 int main() {
 
     printf("holamundo!!\n");
 
+    srand(time(NULL));
+
+    int reps = 10;
+
+    Node* arr;
+    arr = malloc(reps * sizeof(Node));
+
+    int i, r;
+    for(i=0; i<reps; i++) {
+        r = rand()%reps+1;
+        arr[i].key   = r;
+        arr[i].color = red;
+        arr[i].left  = T->nil;
+        arr[i].right = T->nil;
+        arr[i].p     = T->nil;
+        insert(T, &arr[i]);
+    }
+
+    /*
     Node s = {10, red, T->nil, T->nil, T->nil};
     Node q = {5,  red, T->nil, T->nil, T->nil};
     Node r = {3,  red, T->nil, T->nil, T->nil};
@@ -214,6 +262,7 @@ int main() {
     Node *a = search(T->root, 666);
 
     printNode("searched", a);
+    */
 
     printf("holamundo\n");
 
