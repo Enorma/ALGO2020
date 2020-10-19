@@ -25,20 +25,12 @@ Tree t  = {NULL, &p};
 Tree *T = &t;
 
 void printNode(char* msg, Node *x) {
-    if(x==T->nil) {
+    if((x==NULL) || (x==T->nil)) {
         printf("%s, NULL\n", msg);
         return;
     }
     printf("%s, key: %d, color: %s\n", msg, x->key, x->color==red?"red":"black");
 }
-
-/*
-void recPrintNode(int i, Node *x) {
-    if(x==T->nil) {
-        printNode("parent: ", T->nil);
-    }
-}
-*/
 
 void leftRotate(Tree *T, Node *x) {
 
@@ -95,6 +87,7 @@ void insertFixup(Tree *T, Node *z) {
             Node *y = z->p->p->right;
 
             if(y->color == red) {
+
                 z->p->color    = black;
                 y->color       = black;
                 z->p->p->color = red;
@@ -116,6 +109,7 @@ void insertFixup(Tree *T, Node *z) {
             Node *y = z->p->p->left;
 
             if(y->color == red) {
+
                 z->p->color    = black;
                 y->color       = black;
                 z->p->p->color = red;
@@ -139,17 +133,20 @@ void insertFixup(Tree *T, Node *z) {
 }
 
 void insert(Tree *T, Node *z) {
+
     if(T->root==NULL) {
+
         T->nil->left = T->nil->right = T->nil;
         z->color = black;
         T->root = z;
         return;
     }
-    
+
     Node *y = T->nil;
     Node *x = T->root;
 
     while(x != T->nil) {
+
         y = x;
 
         if(z->key < x->key) {
@@ -158,7 +155,7 @@ void insert(Tree *T, Node *z) {
             x = x->right;
         }
     }
-    
+
     z->p = y;
 
     if(y == T->nil) {
@@ -168,15 +165,17 @@ void insert(Tree *T, Node *z) {
     }else {
         y->right = z;
     }
+
     z->left  = T->nil;
     z->right = T->nil;
     z->color = red;
+
     insertFixup(T, z);
 }
 
 Node* search(Node *N, int k) {
 
-    if(N == T->nil) {
+    if((N==NULL) || (N==T->nil)) {
         return T->nil;
     }else if(k == N->key) {
         return N;
@@ -190,7 +189,7 @@ Node* search(Node *N, int k) {
 }
 
 void insertInt(int i) {
-    //printf("haha\n");
+
     struct Node *new = malloc(sizeof(Node));
     new->key = i;
     new->right = new->left = new->p = T->nil;
@@ -202,25 +201,29 @@ int searchInt(int k) {
     return s;
 }
 
-/*int main() {
-    
-    T->nil->left = T->nil->right = T->nil;
-    
+/*
+int main() {
+
     printf("holamundo!!\n");
 
     srand(time(NULL));
     int reps = 100000;
-
     int i,r;
+
     for(i=0; i<reps; i++) {
         r = rand()%(reps)+1;
         printf("%d\n",r);
         insertInt(r);
     }
 
+    printf("Buscando...\n");
+    Node *a = search(T->root, 526);
+    printNode("nodo encontrado", a);
+
     printf("holamundo\n");
-    
+
     return 0;
-}*/
+}
+*/
 
 //eof
