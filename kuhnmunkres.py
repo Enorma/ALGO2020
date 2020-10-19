@@ -148,11 +148,11 @@ def form():
     vertices_B = 5
 
     graph = [
-        [ 7,  1,  1,  7,  2],
-        [14, 11, 12, 16,  9],
-        [19,  5, 12,  5, 12],
-        [16,  4,  5,  7, 13],
-        [12,  8, 12,  3,  5]
+        [63, 25, 48, 95, 23],
+        [46, 32, 78, 61, 42],
+        [12, 65, 98, 43, 67],
+        [25, 36, 42, 85, 76],
+        [61, 42, 13, 52, 86]
     ]
 
     #hacer una copia profunda de graph, porque graph va a cambiar
@@ -223,12 +223,16 @@ def rowReduction():
     global graph
     global bigdim
 
+    print("mínimo de cada fila:\n[ ", end="")
+
     #iterar en cada fila
     for i in range(bigdim):
         min_edge = min(graph[i]) #calcular el mínimo de la fila
+        print(" ", min_edge, " ", sep="", end="")
         graph[i] = list(map(lambda x: x-min_edge, graph[i])) #restar el mínimo a cada elemento
     #for
 
+    print(" ]")
     print("\nDespués de reducir por filas:")
     printGraph()
     input("ENTER para continuar...\n")
@@ -245,6 +249,8 @@ def columnReduction():
     global graph
     global bigdim
 
+    print("mínimo de cada columna:\n[ ", end="")
+
     #iterar en cada columna
     for j in range(bigdim):
 
@@ -257,12 +263,15 @@ def columnReduction():
             #if
         #for
 
+        print(" ", min_edge, " ", sep="", end="")
+
         #iterar en cada celda de la columna
         for i in range(bigdim):
             graph[i][j] -= min_edge #restar el mínimo a cada elemento
         #for
     #for
 
+    print(" ]")
     print("\nDespués de reducir por columnas:")
     printGraph()
     input("ENTER para continuar...\n")
@@ -315,7 +324,7 @@ def calcZeros():
 
     print("Ceros en cada fila: ", g_rows)
     print("Ceros en cada columna: ", g_cols)
-    input("ENTER para continuar...\n")
+    input("\nENTER para continuar...\n")
 
     return
 #calcZeros
