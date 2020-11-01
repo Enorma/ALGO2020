@@ -1,7 +1,12 @@
+#cd C:\Users\Enorma\Dropbox\Cinvestav\°Grafos\Hungarian
+
+from sys import exit
 from functools import reduce
 
 MAXVERT = 10
 MAXEDGE = 99
+
+MINORMAX = "max"
 
 #GLOBALES FIJAS
 vertices_A = "" #cantidad de filas
@@ -143,10 +148,13 @@ def form():
     #for
     '''
 
-    #valores hardcodeados para debuggear
+    #-------------------------------------------------------------------
+    #vvvvvvvvvvvvvv--valores hardcodeados para debuggear--vvvvvvvvvvvvvv
+
     vertices_A = 5
     vertices_B = 5
 
+    '''
     graph = [
         [63, 25, 48, 95, 23],
         [46, 32, 78, 61, 42],
@@ -154,6 +162,18 @@ def form():
         [25, 36, 42, 85, 76],
         [61, 42, 13, 52, 86]
     ]
+    '''
+
+    graph = [
+        [ 7,  1,  1,  7,  2],
+        [14, 11, 12, 16,  9],
+        [19,  5, 12,  5, 12],
+        [16,  4,  5,  7, 13],
+        [12,  8, 12,  3,  5]
+    ]
+
+    #^^^^^^^^^^^^^^--valores hardcodeados para debuggear--^^^^^^^^^^^^^^
+    #-------------------------------------------------------------------
 
     #hacer una copia profunda de graph, porque graph va a cambiar
     #graph2 es de donde sacaremos los pesos de los aristas escogidos al final
@@ -213,6 +233,50 @@ def zeroPad():
 
     return
 #zeroPad
+
+#negar y ajustar la matriz para que se calculen aristas máximos
+def nonNegative():
+
+    global graph
+    global vertices_A
+    global vertices_B
+    global MINORMAX
+
+    if MINORMAX=="min":
+        return
+    elif MINORMAX!="max":
+        sys.exit("Escoge valor buscado min o max.")
+    #if-elif
+
+    maxelem = 0
+    for i in range(vertices_A):
+        for j in range(vertices_B):
+
+            #buscar el valor máximo de la matriz
+            if graph[i][j] > maxelem:
+                maxelem = graph[i][j]
+            #if
+
+            #cambiar toda la matriz a números negativos
+            graph[i][j] *= (-1)
+        #for
+    #for
+
+    #sumar el mayor a cada elemento
+    for i in range(vertices_A):
+        for j in range(vertices_B):
+
+            #con esto los números mayores se volverán los menores
+            graph[i][j] += maxelem
+        #for
+    #for
+
+    print("\nMatriz ajustada para buscar máximos:")
+    printGraph()
+    input("ENTER para continuar...\n")
+
+    return
+#nonNegative
 
 #---------------------------------------------------
 #PASO #1: REDUCIR POR FILAS
@@ -395,7 +459,7 @@ def tryLookup():
             continue
         #if
 
-        #contar cuantos ceros no marcados hay en la fila 
+        #contar cuantos ceros no marcados hay en la fila
         cur_zeros = 0
         for j in range(vertices_B):
             if graph[i][j]==0 and cell_marks[i][j]==0:
@@ -694,6 +758,7 @@ def findOptimalsWrapper():
 def main():
     form()
     zeroPad()
+    nonNegative()
     rowReduction()
     columnReduction()
     findZeroLines()
