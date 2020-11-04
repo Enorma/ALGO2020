@@ -1,5 +1,3 @@
-#cd C:\Users\Enorma\Dropbox\Cinvestav\°Grafos\Hungarian
-
 from sys import exit
 from functools import reduce
 
