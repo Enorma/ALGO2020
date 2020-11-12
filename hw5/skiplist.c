@@ -7,21 +7,20 @@ typedef struct node node;
 #define PLUS_INF INT_MAX
 #define MINUS_INF INT_MIN
 
-typedef struct node
-{
+typedef struct node {
     int value;
     node *up;
     node *down;
     node *right;
     node *left;
 } node;
-int filp()
-{
+
+int filp() {
 
     return rand() % 2;
 }
-int geth(node *n)
-{
+
+int geth(node *n) {
     node *aux = n;
     int h = 0;
     while (aux->down != NULL)
@@ -31,9 +30,10 @@ int geth(node *n)
     }
     return h;
 }
+
 node *S_n;
-int volado(node *n)
-{
+
+int volado(node *n) {
     int result = 0;
     int h = geth(n);
 
@@ -44,8 +44,8 @@ int volado(node *n)
     }
     return result;
 }
-node *crearNodo(int value)
-{
+
+node *crearNodo(int value) {
     node *n;
     n = (node *)malloc(sizeof(node));
     n->value = value;
@@ -53,12 +53,10 @@ node *crearNodo(int value)
     n->down = NULL;
     n->right = NULL;
     n->left = NULL;
-    //int coin = filp();
     return n;
 }
 
-node *crearlista(int value)
-{
+node *crearlista(int value) {
     node *ls = crearNodo(INT_MIN);
     node *le = crearNodo(INT_MAX);
     if (value == -1)
@@ -77,8 +75,7 @@ node *crearlista(int value)
     return ls;
 }
 
-void imprimirskiplist(node *n)
-{
+void imprimirskiplist(node *n) {
     node *aux = n;
     while (aux != NULL)
     {
@@ -95,8 +92,12 @@ void imprimirskiplist(node *n)
         printf("\n");
     }
 }
-void insertar(node *n, int value)
-{
+
+void wrapImprimir() {
+    imprimirskiplist(S_n);
+}
+
+void insertar(node *n, int value) {
     if (n == NULL)
         return;
     if (n->down == NULL)
@@ -173,8 +174,12 @@ void insertar(node *n, int value)
             insertar(n->down, value);
     }
 }
-int borrar(node *n, int value)
-{
+
+void wrapInsertar(int value) {
+    insertar(S_n, value);
+}
+
+int borrar(node *n, int value) {
     if (n == NULL)
         return 0;
     //if(n->down==NULL){return 0;}
@@ -222,23 +227,38 @@ int borrar(node *n, int value)
     return 0;
 }
 
-int main()
-{
+int wrapBorrar(int value) {
+    return borrar(S_n, value);
+}
+
+void init() {
+
     srand(time(NULL));
+
     S_n = crearlista(-1);
-    insertar(S_n, 15);
-    insertar(S_n, 20);
-    insertar(S_n, 2);
-    insertar(S_n, 158);
-    insertar(S_n, 8);
-    
-    insertar(S_n, 10);
-    insertar(S_n, 90);
-    imprimirskiplist(S_n);
-    borrar(S_n, 10);
 
+    //insertar(S_n, 15);
+    //insertar(S_n, 20);
+    //insertar(S_n, 2);
+    //insertar(S_n, 158);
+    //insertar(S_n, 8);
+    //insertar(S_n, 10);
+    //insertar(S_n, 90);
 
-    printf("\n\n\n");
     imprimirskiplist(S_n);
+
+    //borrar(S_n, 10);
+
+    //printf("\n\n\n");
+
+    //imprimirskiplist(S_n);
+}
+
+/*
+int main() {
+    init();
     return 0;
 }
+*/
+
+//eof
