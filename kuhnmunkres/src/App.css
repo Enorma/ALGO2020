@@ -41,15 +41,24 @@
     width: 2em;
     font-family: "sf mono";
     font-size: 1em;
+    border-radius: 0.3em;
     background-color: white;
-    border-radius: 10px;
+}
+
+.boldinput {
+    width: 2em;
+    font-family: "sf mono";
+    font-size: 1em;
+    border-radius: 0.3em;
+    background-color: yellow;
+    font-weight: bold;
 }
 
 .matrixContainer {
     display: grid;
-    border-radius: 10px;
+    border-radius: 0.3em;
     background-color: cyan;
-    padding: 10px;
+    padding: 0.32em;
 }
 
 .mainbutton {
@@ -65,12 +74,33 @@
 .asigPicker {
     font-family: "sf mono";
     text-align: center;
+    z-index: 0;
 }
 
 .title {
     font-size: 3em;
     color: #282c34;
 }
+
+.resultline {
+    font-size: 0.7em;
+}
+
+.inputmatrix {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    background-color: #282c34;
+}
+
+.steptitle {
+    text-decoration: overline underline;
+}
+
+/*ESTILIZAR LOS RADIO BUTTONS*/
 
 /* Customize the label (the container) */
 .radioContainer {
@@ -79,7 +109,7 @@
     padding-left: 1.5em;
     margin-bottom: 0.2em;
     cursor: pointer;
-    font-size: 0.85em;
+    font-size: 0.7em;
     -webkit-user-select: none;
     -moz-user-select: none;
     -ms-user-select: none;
@@ -101,8 +131,8 @@
     position: absolute;
     top: 0;
     left: 0;
-    height: 25px;
-    width: 25px;
+    height: 1.05em;
+    width: 1.05em;
     background-color: #eee;
     border-radius: 50%;
 }
@@ -131,10 +161,10 @@
 
 /* Style the indicator (dot/circle) */
 .radioContainer .radioSpan:after {
-    top: 9px;
-    left: 9px;
-    width: 8px;
-    height: 8px;
+    top: 0.36em;
+    left: 0.36em;
+    width: 0.35em;
+    height: 0.35em;
     border-radius: 50%;
     background: #282c34;
 } 
