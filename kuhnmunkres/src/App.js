@@ -6,6 +6,8 @@ import './App.css';
 
 const SIZELIMIT = 10;
 const EDGELIMIT = 99;
+const MAXSTEPS  = 2000;
+const MAXPATHS  = 50;
 
 //------------------------------
 //CONSTANTES PARA FASES
@@ -20,10 +22,15 @@ const STEPF      =  4;
 //------------------------------
 //VARIABLES GLOBALES
 
-//variable de control de fase
+//variables de control de fase
 let next       = INITIALIZE; //variable que indica en qué fase estamos
 let count      = 0;          //contador de componentes para sus keys
-let paths      = 0;
+let paths      = 0;          //contador de caminos m-aumentantes calculados
+
+//historiales
+let errtrack   = 0;          //contador de intentos desde el paso 0
+let history1   = {};         //para guardar los valores de la vuelta anterior
+let history2   = {};         //para guardar los valores de la vuelta actual
 
 //valores numéricos
 let alfa       = null;       //número que representa el factor alfaL
@@ -51,6 +58,95 @@ let vertyset   = new Set();  //conjunto de vértices del otro lado de la biparti
 let neighbors  = new Set();  //conjunto de vértices vecinos de S
 let sset       = new Set();  //subconjunto de vértices del grafo (disjunto de T)
 let tset       = new Set();  //subconjunto de vértices del grafo (disjunto de S)
+
+//------------------------------
+//COSAS HARDCODEADAS PARA TESTEAR
+
+const gl0 = new Set([[4,4],[1,2],[4,0],[3,4],[0,0],[1,4],[3,0],[2,2]]); //16 max, 20 pasos, 3 paths
+const ejemplo0 = [ //max 16
+    [ 5,  0,  0,  1,  2],
+    [ 0,  0,  3,  1,  3],
+    [ 1,  1,  5,  0,  3],
+    [ 4,  1,  0,  1,  4],
+    [ 4,  1,  3,  1,  4]
+];
+
+const gl1 = new Set([[0,1],[4,4],[2,1],[4,3],[3,1],[1,1],[1,4],[0,2],[2,2],[1,0],[3,2],[1,3]]); //14 max, 8 pasos, 1 path
+const ejemplo1 = [ //max 14
+    [ 3,  5,  5,  4,  1],
+    [ 2,  2,  0,  2,  2],
+    [ 2,  4,  4,  1,  0],
+    [ 0,  1,  1,  0,  0],
+    [ 1,  2,  1,  3,  3]
+];
+
+const gl3 = new Set([[4,4],[2,4],[0,4],[2,0],[1,4],[0,2],[3,2]]); //16 max, 30 pasos, 5 paths
+const ejemplo3 = [ //max 16
+    [ 0,  0,  4,  1,  4],
+    [ 4,  1,  2,  0,  5],
+    [ 5,  1,  2,  0,  5],
+    [ 0,  0,  3,  1,  2],
+    [ 0,  0,  0,  1,  5]
+];
+
+const gl4 = new Set([[2,4],[4,0],[3,4],[0,0],[2,0],[1,4],[3,2]]); //15 max, 23 pasos, 4 paths
+const ejemplo4 = [ //max 15
+    [ 4,  1,  3,  0,  3],
+    [ 2,  1,  1,  1,  4],
+    [ 4,  1,  1,  0,  4],
+    [ 3,  1,  4,  1,  4],
+    [ 5,  1,  4,  1,  3]
+];
+
+const gl5 = new Set([[0,4],[4,3],[2,3],[3,3],[1,0]]); //80 max, 36 pasos, 5 paths
+const ejemplo5 = [ //max 80
+    [ 4,  1, 14,  0, 18],
+    [20, 15,  5, 18, 13],
+    [ 1,  7, 15, 20, 14],
+    [ 6,  4, 17, 18,  5],
+    [ 9,  0,  2, 18,  0]
+];
+
+//---
+
+const gl2 = new Set([[4,4],[1,2],[3,4],[0,0],[2,2],[1,0]]); //15 (fail)
+const ejemplo2 = [ //max 15
+    [ 2,  1,  0,  1,  1],
+    [ 5,  0,  5,  0,  3],
+    [ 1,  0,  3,  0,  0],
+    [ 0,  0,  0,  0,  5],
+    [ 1,  0,  2,  1,  3]
+];
+
+const gl7 = new Set([[4,4],[1,2],[0,3],[3,3],[2,2]]); //377 max (fail)
+const ejemplo7 = [ //max 377
+    [63, 25, 48, 95, 23],
+    [46, 32, 78, 61, 42],
+    [12, 65, 98, 43, 67],
+    [25, 36, 42, 85, 76],
+    [61, 42, 13, 52, 86]
+];
+
+const gl6 = new Set([[4,0],[0,0],[0,3],[2,0],[4,2],[3,0],[1,3]]); //62 max (fail)
+const ejemplo6 = [ //max 62
+    [ 7,  1,  1,  7,  2],
+    [14, 11, 12, 16,  9],
+    [19,  5, 12,  5, 12],
+    [16,  4,  5,  7, 13],
+    [12,  8, 12,  3,  5]
+];
+
+//---
+
+const ejemploA = [ //4x4
+    [ 0, 1, 3, 0],
+    [ 1, 1, 1, 0],
+    [ 3, 0, 3, 0],
+    [ 0, 0, 0, 0],
+];
+
+const ejemplo = ejemplo5;
+const glejemplo = gl7;
 
 //------------------------------
 //OPERACIONES CON CONJUNTOS
@@ -109,6 +205,43 @@ Set.prototype.symDiff = function(otherSet) {
     return newset;
 };
 
+Array.prototype.shuffle = function() {
+
+    for(let i = this.length-1; i>0; i--) {
+        const j = Math.floor(Math.random() * (i+1));
+        [ this[i],this[j] ] = [ this[j],this[i] ];
+    }
+
+    return this;
+};
+
+Set.prototype.shuffle = function() {
+
+    const buff = Array.from(this);
+    this.clear();
+    buff.shuffle();
+
+    while(buff.length) {
+        this.add(buff.pop());
+    }
+};
+
+Set.prototype.strEdgeSet = function() {
+
+    let str = "{";
+    this.forEach(a => {str += `(${a[0]},${a[1]}),`});
+    str += "}";
+    return str;
+};
+
+Set.prototype.strVertSet = function() {
+
+    let str = "{";
+    this.forEach(v => {str += `${v},`});
+    str += "}";
+    return str;
+};
+
 //------------------------------
 //CLASES
 
@@ -155,94 +288,12 @@ const makeMatrix = (size, limit) => {
     const matrix = [];
     let vector   = [];
 
-    const ejemplo0 = [ //max 16
-        [ 5,  0,  0,  1,  2],
-        [ 0,  0,  3,  1,  3],
-        [ 1,  1,  5,  0,  3],
-        [ 4,  1,  0,  1,  4],
-        [ 4,  1,  3,  1,  4]
-    ];
-
-    const ejemplo1 = [ //max 14
-        [ 3,  5,  5,  4,  1],
-        [ 2,  2,  0,  2,  2],
-        [ 2,  4,  4,  1,  0],
-        [ 0,  1,  1,  0,  0],
-        [ 1,  2,  1,  3,  3]
-    ];
-
-    const ejemplo2 = [ //max 15
-        [ 2,  1,  0,  1,  1],
-        [ 5,  0,  5,  0,  3],
-        [ 1,  0,  3,  0,  0],
-        [ 0,  0,  0,  0,  5],
-        [ 1,  0,  2,  1,  3]
-    ];
-
-    const ejemplo3 = [ //max 16
-        [ 0,  0,  4,  1,  4],
-        [ 4,  1,  2,  0,  5],
-        [ 5,  1,  2,  0,  5],
-        [ 0,  0,  3,  1,  2],
-        [ 0,  0,  0,  1,  5]
-    ];
-
-    //--------------------------------
-
-    const ejemplo4 = [ //phail
-        [ 4,  1,  3,  0,  3],
-        [ 2,  1,  1,  1,  4],
-        [ 4,  1,  1,  0,  4],
-        [ 3,  1,  4,  1,  4],
-        [ 5,  1,  4,  1,  3]
-    ];
-
-    const ejemplo5 = [ //phail
-        [ 4,  1, 14,  0, 18],
-        [20, 15,  5, 18, 13],
-        [ 1,  7, 15, 20, 14],
-        [ 6,  4, 17, 18,  5],
-        [ 9,  0,  2, 18,  0]
-    ];
-
-    const ejemplo6 = [ //phail
-        [ 7,  1,  1,  7,  2],
-        [14, 11, 12, 16,  9],
-        [19,  5, 12,  5, 12],
-        [16,  4,  5,  7, 13],
-        [12,  8, 12,  3,  5]
-    ];
-
-    const ejemplo7 = [ //phail
-        [ 7,  1,  1,  7,  2],
-        [14, 11, 12, 16,  9],
-        [19,  5, 12,  5, 12],
-        [16,  4,  5,  7, 13],
-        [12,  8, 12,  3,  5]
-    ];
-
-    const ejemplo8 = [ //phail
-        [63, 25, 48, 95, 23],
-        [46, 32, 78, 61, 42],
-        [12, 65, 98, 43, 67],
-        [25, 36, 42, 85, 76],
-        [61, 42, 13, 52, 86]
-    ];
-
-    const ejemploA = [ //4x4
-        [ 0, 1, 3, 0],
-        [ 1, 1, 1, 0],
-        [ 3, 0, 3, 0],
-        [ 0, 0, 0, 0],
-    ];
-
-    const ejemplo = ejemplo4;
-
     size = Number(size);
     for(let i=0; i<size; i++) {
         vector = vector.slice(99);
         for(let j=0; j<size; j++) {
             vector.push(size===5 ? ejemplo[i][j] : getRand(limit));
+            //vector.push(getRand(limit));
         }
         matrix.push(vector);
     }
@@ -272,6 +323,52 @@ const totalWeight = (edgeset, matrix) => {
     });
 
     return acc;
+};
+
+//-----------------------------------------------------------
+//CONTROL PARA REINTENTAR
+
+const compareHistory = () => {
+
+    for(let k of Object.keys(history1)) {
+        if(history1[k]!==history2[k]) {
+            return false;
+        }
+    }
+
+    for(let k of Object.keys(history2)) {
+        if(history2[k]!==history1[k]) {
+            return false;
+        }
+    }
+
+    return true;
+};
+
+const getHistory = () => {
+
+    const hist = {
+
+        "alfa"       : alfa===0       ? 0 : alfa       ? alfa.toString()       : "null",
+        "freevertex" : freevertex===0 ? 0 : freevertex ? freevertex.toString() : "null",
+        "yvert"      : yvert===0      ? 0 : yvert      ? yvert.toString()      : "null",
+        "zvert"      : zvert===0      ? 0 : zvert      ? zvert.toString()      : "null",
+
+        "labelx"     : labelx    ? labelx.toString()      : "null",
+        "labely"     : labely    ? labely.toString()      : "null",
+
+        "gl"         : gl        ? gl.strEdgeSet()        : "null",
+        "matching"   : matching  ? matching.strEdgeSet()  : "null",
+        "newedges"   : newedges  ? newedges.strEdgeSet()  : "null",
+
+        "vertxset"   : vertxset  ? vertxset.strVertSet()  : "null",
+        "vertyset"   : vertyset  ? vertyset.strVertSet()  : "null",
+        "neighbors"  : neighbors ? neighbors.strVertSet() : "null",
+        "sset"       : sset      ? sset.strVertSet()      : "null",
+        "tset"       : tset      ? tset.strVertSet()      : "null",
+    };
+
+    return hist;
 };
 
 //------------------------------
@@ -478,6 +575,8 @@ const StepOneNonFinal = ({
 const StepOneFinal = ({
     matching, //Matching Óptimo: <set of edges: set of (NUMBER,NUMBER) or empty set>
     matrix,   //la matriz:       <2D array of weights: 2D array of NUMBER>
+    steps,
+    paths,
     }) => {
 
     return(
@@ -492,6 +591,11 @@ const StepOneFinal = ({
             <p>
                 Peso Óptimo:<br />
                 <span className="resultline">{totalWeight(matching, matrix)}</span>
+            </p>
+            <p>
+                <span className="resultline">
+                    {`Se calcularon ${steps} pasos y ${paths} caminos m-aumentantes.`}
+                </span>
             </p>
         </React.Fragment>
     );
@@ -509,7 +613,7 @@ const StepTwoA = ({
     return(
         <React.Fragment>
             <p className="steptitle">
-                =============== PASO 2 ===============
+                =============== PASO 2A ===============
             </p>
             <p>
                 Conjunto T y Vértices vecinos del conjunto S:
@@ -546,10 +650,10 @@ const StepTwoB = ({
     return(
         <React.Fragment>
             <p className="steptitle">
-                =============== PASO 2 ===============
+                =============== PASO 2B ===============
             </p>
             <p>
-                Vértices vecinos del conjunto S:
+                Vértices vecinos del conjunto S en Gl:
                 <RenderVertSet vertset={neighbors} />
             </p>
             <p>
@@ -580,14 +684,14 @@ const StepThreeA = ({
     return(
         <React.Fragment>
             <p className="steptitle">
-                {`=============== PASO 3 (vuelta # ${reps}) ===============`}
+                {`=============== PASO 3A (vuelta # ${reps}) ===============`}
             </p>
             <p>
                 Vértice Y incluido entre los vecinos del conjunto S y no incluido en T:<br />
                 <span className="resultline">{yvert ? yvert : "no se encontró"}</span>
             </p>
             <p>
-                Vértice Z m-saturado por el vértice Y:<br />
+                Vértice Z m-saturado por el vértice Y en el matching:<br />
                 <span className="resultline">{zvert ? zvert : "no se encontró"}</span>
             </p>
             <p>
@@ -630,14 +734,14 @@ const StepThreeB = ({
     return(
         <React.Fragment>
             <p className="steptitle">
-                =============== PASO 3 ===============
+                =============== PASO 3B ===============
             </p>
             <p>
                 Vértice Y incluido entre los vecinos del conjunto S y no incluido en T:<br />
                 <span className="resultline">{yvert}</span>
             </p>
             <p>
-                Vértice Z m-saturado por el vértice Y:<br />
+                Vértice Z m-saturado por el vértice Y en el matching:<br />
                 <span className="resultline">{zvert}</span>
             </p>
             <p>
@@ -658,7 +762,8 @@ const StepThreeB = ({
 };
 
 const ErrorBanner = ({
-    count,
+    steps,
+    paths,
     }) => {
 
     return(
@@ -668,7 +773,7 @@ const ErrorBanner = ({
             </p>
             <p>
                 <span className="resultline">
-                    {`Se realizaron ${count} pasos.`}
+                    {`Se calcularon ${steps} pasos y ${paths} caminos m-aumentantes.`}
                 </span>
             </p>
         </React.Fragment>
@@ -697,7 +802,8 @@ const App = () => {
     const resetAll = step => {
 
         next       = step;
-        count      = 0;
+        //count      = 0;
+        paths      = 0;
         alfa       = null;
         freevertex = null;
         yvert      = null;
@@ -745,6 +851,7 @@ const App = () => {
     };
 
     const handleCalcClick = () => {
+        count = 0;
         resetAll(STEP0);
     };
 
@@ -782,6 +889,8 @@ const App = () => {
             }
         }
 
+        gl.shuffle();
+
         //console.log("gl:", gl); //descomentar para debuggear
 
         return;
@@ -813,11 +922,14 @@ const App = () => {
 
         primerLabeling();
         calcSubgrafoDeIgualdad();
+
+        //gl = glejemplo; //hardcodeado para testear
+
         primerMatching();
 
         next = STEP1;
 
-        const infostep = <StepZero key={++count} labelx={labelx} labely={labely} gl={gl} matching={matching} vertxset={vertxset} vertyset={vertyset} />
+        const infostep = <StepZero key={++count} labelx={labelx} labely={labely} gl={gl} matching={matching} vertxset={vertxset} vertyset={vertyset} />;
         setInfo([...info, infostep]);
 
         return;
@@ -829,17 +941,19 @@ const App = () => {
 
         for(let i=0; i<matrixSize; i++) {
             if(!vertxset.has(i)) {
-                return i;
+                freevertex = i;
+                return;
             }
         }
 
-        return -1;
+        freevertex = -1;
+        return;
     };
 
     const paso1 = () => {
 
         let infostep = null;
-        freevertex = encontrarVerticeSolo();
+        encontrarVerticeSolo();
 
         if(freevertex===-1) {
 
@@ -847,7 +961,7 @@ const App = () => {
 
             next = STEPF;
 
-            infostep = <StepOneFinal key={++count} matching={matching} matrix={matrixDeepCopy(matrix)} />
+            infostep = <StepOneFinal key={++count} matching={matching} matrix={matrixDeepCopy(matrix)} steps={count} paths={paths} />;
         }else {
 
             sset.clear();
@@ -857,7 +971,7 @@ const App = () => {
 
             next = STEP2;
 
-            infostep = <StepOneNonFinal key={++count} freevertex={freevertex} sset={sset} tset={tset} />
+            infostep = <StepOneNonFinal key={++count} freevertex={freevertex} sset={sset} tset={tset} />;
         }
 
         setInfo([...info, infostep]);
@@ -930,16 +1044,16 @@ const App = () => {
         let infostep = null;
         vecinosDeS();
 
-        if(tset.equals(neighbors)) {
+        if(tset.equals(neighbors)) { //step 2A
 
             calcAlfa();
             reconstruirLabels();
             calcSubgrafoDeIgualdad();
 
-            infostep = <StepTwoA key={++count} neighbors={neighbors} alfa={alfa} labelx={labelx} labely={labely} gl={gl} />
-        }else {
+            infostep = <StepTwoA key={++count} neighbors={neighbors} alfa={alfa} labelx={labelx} labely={labely} gl={gl} />;
+        }else { //step 2B
 
-            infostep = <StepTwoB key={++count} neighbors={neighbors} tset={tset} />
+            infostep = <StepTwoB key={++count} neighbors={neighbors} tset={tset} />;
         }
 
         next = STEP3;
@@ -953,6 +1067,7 @@ const App = () => {
     const calcCaminoMAumentante = () => {
 
         paths++;
+        newedges.clear();
 
         let openarr     = [];
         let closedarr   = [];
@@ -963,30 +1078,10 @@ const App = () => {
         let hijo        = null;
         let start       = null;
 
-        let a_es_x      = false;
-        let a_es_y      = false;
-        let a_es_x_de_e = false;
-        let a_es_y_de_e = false;
-        let m_tiene_e   = false;
-        let p_match     = "";
-
-        let innerloops  = 0;
-        let middleloops = 0;
-        let outerloops  = 0;
-        let totalloops  = 1;
-
-        outerloops = 1;
         for(let a of gl) {
 
             if(a[0]===-0 || a[0]===+0) {a[0] = 0;}
             if(a[1]===-0 || a[1]===+0) {a[1] = 0;}
-
-            //console.log();
-            //console.log("path #:", paths);
-            //console.log("outerloop #:", outerloops);
-            //console.log("totalloop #:", totalloops);
-            //console.log("checando a: (", a[0], ",", a[1], ")");
-            //console.log();
 
             start = null;
 
@@ -999,15 +1094,7 @@ const App = () => {
 
                 openarr.push(start);
 
-                middleloops = 1;
                 while(openarr.length > 0) {
-
-                    //console.log();
-                    //console.log("path #:", paths);
-                    //console.log("outerloop #:", outerloops);
-                    //console.log("middleloop #:", middleloops);
-                    //console.log("totalloop #:", totalloops);
-                    //console.log();
 
                     actual = openarr.pop();
 
@@ -1031,44 +1118,12 @@ const App = () => {
 
                     newweight = actual.peso + 1;
 
-                    innerloops = 1;
                     for(let e of gl) {
-
-                        //console.log();
-                        //console.log("path #:", paths);
-                        //console.log("outerloop #:", outerloops);
-                        //console.log("middleloop #:", middleloops);
-                        //console.log("innerloop #:", innerloops);
-                        //console.log("totalloop #:", totalloops);
-                        //console.log();
 
                         if(e[0]===-0 || e[0]===+0) {e[0] = 0;}
                         if(e[1]===-0 || e[1]===+0) {e[1] = 0;}
 
-                        a_es_x      = (actual.side==="x");
-                        a_es_x_de_e = (actual.num===e[0]);
-                        a_es_y      = (actual.side==="y");
-                        a_es_y_de_e = (actual.num===e[1]);
-                        m_tiene_e   = (matching.hasEdge(e[0],e[1]));
-
-                        p_match = "";
-                        matching.forEach(m => p_match+="("+m[0]+","+m[1]+"), ");
-
-                        //console.log();
-                        //console.log("matching:"     , p_match);
-                        //console.log("actual:"       , actual.toString());
-                        //console.log("checando e: (" , e[0], ",", e[1], ")");
-                        //console.log("a_es_x:"       , a_es_x);
-                        //console.log("a_es_x_de_e:"  , a_es_x_de_e);
-                        //console.log("or...");
-                        //console.log("a_es_y:"       , a_es_y);
-                        //console.log("a_es_y_de_e:"  , a_es_y_de_e);
-                        //console.log("m_tiene_e:"    , m_tiene_e);
-                        //console.log();
-
-                        if( ( a_es_x && a_es_x_de_e ) || ( a_es_y && a_es_y_de_e && m_tiene_e ) ) {
-
-                            //console.log("entré!");
+                        if( (actual.side==="x" && actual.num===e[0]) || (actual.side==="y" && actual.num===e[1] && matching.hasEdge(e[0],e[1])) ) {
 
                             found = false;
 
@@ -1078,13 +1133,7 @@ const App = () => {
                                 hijo = {"side":"x", "num":e[0]};
                             }
 
-                            //console.log("newweight:", newweight);
-                            //console.log("hijo:", hijo.side, ",", hijo.num);
-                            //console.log("closed:", closedarr);
-
                             for(let o of openarr) {
-
-                                //console.log("edge o:", o.toString());
 
                                 if(o.num===hijo.num) {
 
@@ -1097,13 +1146,11 @@ const App = () => {
 
                                     break;
                                 }
-                            };
+                            }
 
                             if(!found) {
 
                                 for(let c of closedarr) {
-
-                                    //console.log("edge c:", c.toString());
 
                                     if(c.num===hijo.num) {
 
@@ -1120,7 +1167,7 @@ const App = () => {
 
                                         break;
                                     }
-                                };
+                                }
                             }
 
                             if(!found) {
@@ -1134,32 +1181,11 @@ const App = () => {
                                 }
                             }
                         }
-
-                        innerloops++;
-                        totalloops++;
-                        //if(innerloops>=50 || totalloops>=50) {
-                        //    console.log("demasiados innerloops, break!");
-                        //    break;
-                        //}
                     }
 
                     closedarr.push(actual);
-
-                    middleloops++;
-                    totalloops++;
-                    //if(middleloops>=50 || totalloops>=50) {
-                    //    console.log("demasiados middleloops, break!");
-                    //    break;
-                    //}
                 }
             }
-
-            outerloops++;
-            totalloops++;
-            //if(outerloops>=50 || totalloops>=50) {
-            //    console.log("demasiados outerloops, break!");
-            //    break;
-            //}
         }
 
         newedges = rset;
@@ -1205,31 +1231,75 @@ const App = () => {
             }
         }
 
-        if(zvert!==null) {
+        if(zvert!==null) { //step 3B
 
             sset.add(zvert);
             tset.add(yvert);
 
             next = STEP2;
 
-            infostep = <StepThreeB key={++count} yvert={yvert} zvert={zvert} sset={sset} tset={tset} />
-        }else {
-
-            //if(paths>=20) {
-            //    next = STEPF;
-            //    infostep = <ErrorBanner key={++count} count={count} />
-            //    setInfo([...info, infostep]);
-            //    return;
-            //}
+            infostep = <StepThreeB key={++count} yvert={yvert} zvert={zvert} sset={sset} tset={tset} />;
+        }else { //step 3A
 
             calcCaminoMAumentante();
             reCalcMatching();
 
+            if(paths>=MAXPATHS) {
+                next = STEPF;
+                infostep = <ErrorBanner key={++count} steps={count} paths={paths} />;
+                setInfo([...info, infostep]);
+                return;
+            }
+
+            if(newedges.size===0) {
+
+                if(errtrack===0) { //una vez que no hay camino m-aumentante
+
+                    errtrack = 1;
+                    history1 = {};
+                    history2 = {};
+                }else if(errtrack===1) { //dos veces seguidas que no hay camino m-aumentante
+
+                    errtrack = 2;
+                    history1 = getHistory();
+                    history2 = {};
+                }else if(errtrack===2) { //tres veces seguidas que no hay camino m-aumentante
+
+                    history2 = getHistory();
+
+                    if(compareHistory()) { //las últimas 2 vueltas fueron idénticas, resetear o se va a ciclar
+
+                        resetAll(STEP0);
+                        return;
+                    }else { //las últimas 2 vueltas fueron diferentes, seguir al pendiente
+
+                        errtrack = 2;
+                        history1 = history2;
+                        history2 = {};
+                    }
+                }
+            }else {
+
+                errtrack = 0;
+                history1 = {};
+                history2 = {};
+            }
+
             next = STEP1;
 
-            infostep = <StepThreeA key={++count} reps={paths} yvert={yvert} zvert={zvert} vertxset={vertxset} vertyset={vertyset} gl={gl} newedges={newedges} matching={matching} />
+            infostep = <StepThreeA key={++count} reps={paths} yvert={yvert} zvert={zvert} vertxset={vertxset} vertyset={vertyset} gl={gl} newedges={newedges} matching={matching} />;
         }
 
+        setInfo([...info, infostep]);
+        return;
+    };
+
+    //MANEJO DE ERROR
+
+    const errorOut = () => {
+
+        next = STEPF;
+        let infostep = <ErrorBanner key={++count} steps={count} paths={paths} />;
         setInfo([...info, infostep]);
         return;
     };
@@ -1239,7 +1309,7 @@ const App = () => {
 
     useEffect(() => {
 
-        if(count<=2000) {
+        if(count<=MAXSTEPS) {
 
             switch(next) {
                 case STEP0:
@@ -1258,6 +1328,8 @@ const App = () => {
                     break;
                 //default
             }
+        }else {
+            errorOut();
         }
     }, [info]);
 
