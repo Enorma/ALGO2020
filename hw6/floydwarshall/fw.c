@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "fw.h"
 
 #define MAXBUF 100
 
@@ -135,6 +136,7 @@ char* runFW(char* mstr, int slen, int mdim) {
     return outputstr;
 }
 
+/*
 int main() {
 
     //printf("\nmain"); //descomentar para debuggear
@@ -150,7 +152,8 @@ int main() {
 
     printf("\nending: [%s]\n", os);
 
-    return 1;
+    return 0;
 }
+*/
 
 //EOF
