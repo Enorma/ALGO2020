@@ -37,7 +37,7 @@ def captureMatrix(kind):
     global post
     global m
 
-    #print("\nCapturando matriz {0}\n".format(kind))
+    print("\nCapturando matriz {0}\n".format(kind))
 
     ask = ""
     if kind=="pre":
@@ -121,7 +121,7 @@ def captureMatrix(kind):
             [0,0,0,0,1]
         ]
 
-        pre = abelranapre
+        #pre = abelranapre
 
         ask = "Tokens entrantes a t{0} desde p{1}: "
     else:
@@ -196,12 +196,12 @@ def captureMatrix(kind):
             [0,1,0,1,0]
         ]
 
-        post = abelranapost
+        #post = abelranapost
 
         ask = "Tokens salientes de t{0} hacia p{1}: "
     #if-else
 
-    return #para debuggear
+    #return #para debuggear
 
     m = []
     for p in range(0, np):
@@ -599,11 +599,13 @@ def expandTreeNode(G, mark):
     #Arista desde su padre
 
     if len(marcados[mark]["originalParent"].keys())>0:
+        origparent   = marcados[mark]["originalParent"]["mark"]
+        parent_trans = marcados[mark]["parents"][origparent]
         G.edge(
             "expTree"+str(marcados[mark]["originalParent"]["mark"]),
             "expTree"+str(mark),
             fontsize="12.0",
-            label="t"+str(marcados[mark]["originalParent"]["pre_t"])
+            label="t"+str(parent_trans)
         )
     #if
 
@@ -672,11 +674,13 @@ def expandGraphNode(G, mark):
     #Arista desde su padre
 
     if len(marcados[mark]["originalParent"].keys())>0:
+        origparent   = marcados[mark]["originalParent"]["mark"]
+        parent_trans = marcados[mark]["parents"][origparent]
         G.edge(
             "covGraph"+str(marcados[mark]["originalParent"]["mark"]),
             "covGraph"+str(mark),
             fontsize="12.0",
-            label="t"+str(marcados[mark]["originalParent"]["pre_t"])
+            label="t"+str(parent_trans)
         )
     #if
 
