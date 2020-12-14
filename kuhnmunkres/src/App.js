@@ -292,8 +292,8 @@ const makeMatrix = (size, limit) => {
     for(let i=0; i<size; i++) {
         vector = vector.slice(99);
         for(let j=0; j<size; j++) {
-            vector.push(size===5 ? ejemplo[i][j] : getRand(limit));
-            //vector.push(getRand(limit));
+            //vector.push(size===5 ? ejemplo[i][j] : getRand(limit));
+            vector.push(getRand(limit));
         }
         matrix.push(vector);
     }
@@ -592,11 +592,11 @@ const StepOneFinal = ({
                 Peso Óptimo:<br />
                 <span className="resultline">{totalWeight(matching, matrix)}</span>
             </p>
-            <p>
+            {/* <p>
                 <span className="resultline">
                     {`Se calcularon ${steps} pasos y ${paths} caminos m-aumentantes.`}
                 </span>
-            </p>
+            </p> */}
         </React.Fragment>
     );
 };
